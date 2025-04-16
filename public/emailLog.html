@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Email Log</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 40px auto;
+        background: #fff;
+        padding: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      input[type="text"] {
+        padding: 8px;
+        width: 300px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      button {
+        padding: 8px 12px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+      th {
+        background: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Email Log</h1>
+    <div>
+      <input type="text" id="search" placeholder="Search emails..." />
+      <button id="searchButton">Search</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Recipient</th>
+          <th>Subject</th>
+          <th>Body</th>
+        </tr>
+      </thead>
+      <tbody id="emailTable"></tbody>
+    </table>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      function fetchEmails(search) {
+        var url = "/emails";
+        if (search) {
+          url += "?search=" + encodeURIComponent(search);
+        }
+        axios
+          .get(url)
+          .then(function (res) {
+            var emails = res.data;
+            var tbody = document.getElementById("emailTable");
+            tbody.innerHTML = "";
+            emails.forEach(function (email) {
+              var row = document.createElement("tr");
+              row.innerHTML =
+                "<td>" +
+                email.id +
+                "</td><td>" +
+                email.recipient +
+                "</td><td>" +
+                email.subject +
+                "</td><td>" +
+                email.body +
+                "</td>";
+              tbody.appendChild(row);
+            });
+          })
+          .catch(function (err) {
+            console.error(err);
+          });
+      }
+      document
+        .getElementById("searchButton")
+        .addEventListener("click", function () {
+          var search = document.getElementById("search").value;
+          fetchEmails(search);
+        });
+      // Fetch all emails on initial load
+      fetchEmails();
+    </script>
+  </body>
+</html>

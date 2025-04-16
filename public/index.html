@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>S3 File Manager</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        margin: 40px auto;
+        max-width: 600px;
+        background: #f7f7f7;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #222;
+        font-size: 28px;
+      }
+
+      form {
+        margin-bottom: 20px;
+      }
+
+      input[type="file"] {
+        padding: 6px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: white;
+      }
+
+      button {
+        padding: 8px 16px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        margin-left: 10px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #0056b3;
+      }
+
+      .file-list {
+        margin-top: 30px;
+      }
+
+      .file-item {
+        display: inline-block;
+        margin: 6px 0;
+        color: #007bff;
+        text-decoration: none;
+      }
+
+      .file-item:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>S3 File Manager</h1>
+
+    <form id="uploadForm">
+      <input type="file" name="file" id="fileInput" required />
+      <button type="submit">Upload</button>
+    </form>
+
+    <div class="file-list" id="fileList">
+      <h2>Uploaded Files:</h2>
+      <div id="filesContainer">Loading...</div>
+      <hr style="margin: 40px 0" />
+
+      <h2>Send March Dog Photos</h2>
+      <input
+        type="email"
+        id="recipientEmail"
+        placeholder="Enter email address"
+        required
+        style="
+          padding: 6px;
+          width: 70%;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+        "
+      />
+      <button onclick="sendDogPhotos()" style="margin-top: 10px">
+        Send Email
+      </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      const uploadForm = document.getElementById("uploadForm");
+      const filesContainer = document.getElementById("filesContainer");
+
+      const BACKEND_URL = "http://localhost:3000";
+
+      // Upload file
+      uploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById("fileInput");
+        const file = fileInput.files[0];
+        if (!file) return alert("Файл сонгоно уу");
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const res = await axios.post(`${BACKEND_URL}/upload`, formData);
+          alert("Амжилттай хадгалагдлаа");
+          fileInput.value = "";
+          loadFiles();
+        } catch (err) {
+          console.error(err);
+          alert("Алдаа гарлаа");
+        }
+      });
+
+      // Load file list
+      async function loadFiles() {
+        try {
+          const res = await axios.get(`${BACKEND_URL}/files`);
+          const files = res.data;
+
+          if (files.length === 0) {
+            filesContainer.innerHTML = "<i>Хоосон байна</i>";
+            return;
+          }
+
+          filesContainer.innerHTML = "";
+          files.forEach((file) => {
+            const link = document.createElement("a");
+            link.href = file.url;
+            link.textContent = `${file.key}`;
+            link.className = "file-item";
+            link.target = "_blank";
+            filesContainer.appendChild(link);
+            filesContainer.appendChild(document.createElement("br"));
+          });
+        } catch (err) {
+          console.error(err);
+          filesContainer.innerHTML =
+            '<span style="color:red;">Алдаа гарлаа</span>';
+        }
+      }
+      async function sendDogPhotos() {
+        const to = document.getElementById("recipientEmail").value;
+        if (!to || !to.includes("@")) {
+          alert("Зөв имэйл хаяг оруулна уу");
+          return;
+        }
+
+        try {
+          const res = await axios.post(`${BACKEND_URL}/send-dog-photos`, {
+            to,
+          });
+          alert("Амжилттай илгээгдлээ: " + to);
+        } catch (err) {
+          console.error(err);
+          alert("Илгээхэд алдаа гарлаа");
+        }
+      }
+      // Init
+      loadFiles();
+    </script>
+  </body>
+</html>
